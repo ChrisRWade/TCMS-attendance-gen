@@ -1,0 +1,123 @@
+.department h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #000;
+    margin: 0;  
+}
+
+.employee {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: #f5f5f5;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+}
+
+.employee li {
+    list-style: none;
+    color: #000;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-left: 20px;
+    padding-right: 20px;
+    border-radius: 0.5rem;
+    background-color: #f5f5f5;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.punches {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+    padding-inline-start: 0;
+    width: 100%;
+}
+
+.oddPunches {
+    margin: 0;
+}
+
+.punches .latePunch {
+    color: #ff0000;
+}
+
+.date.oddPunches {
+    position: relative;
+    /* Ensure the .date container can serve as a reference for the absolute positioning of the pseudo-element */
+}
+
+.date.oddPunches::before {
+    content: "?";
+    /* This is the question mark */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12em;
+    /* Adjust the size of the question mark as needed */
+    color: rgba(0, 0, 0, 0.2);
+    /* Semi-transparent color for the question mark */
+    z-index: 1;
+    /* Ensure it's above the content of the .date container but below any interactive elements you might have */
+    pointer-events: none;
+    /* Allows clicks to pass through to elements underneath */
+}
+
+@media print {
+    .date {
+        page-break-inside: avoid;
+        /* Avoid breaking inside date containers */
+        break-inside: avoid;
+        /* For non-IE11 browsers */
+    }
+          .department:first-child {
+              page-break-before: auto;
+              /* Avoids adding a break before the first item */
+          }
+    
+          .department {
+              page-break-before: always;
+              /* Always start new departments on a new page */
+          }
+}
+
+@media screen {
+    .noPrint {
+        display: none;
+    }
+}
+
+@media print {
+.noPrint,
+    .printFooter {
+        display: block;
+    }
+
+    .printFooter {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        text-align: center;
+        /* Other styling as needed */
+    }
+}

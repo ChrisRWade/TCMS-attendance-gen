@@ -1,0 +1,12 @@
+.reminder {
+    margin-top: 15rem;   
+}
+
+
+
+@media print {
+    .noPrint {
+        display: none;
+        /* Elements with noPrint class won’t be printed */
+    }
+}

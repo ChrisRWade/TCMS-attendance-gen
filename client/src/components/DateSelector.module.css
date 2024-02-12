@@ -1,0 +1,33 @@
+/* DateSelector.module.css */
+input[type="date"] {
+    padding: 12px 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    background-color: #f8f8f8;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.3s ease-in-out;
+}
+
+input[type="date"]:hover {
+    border-color: #888;
+    background-color: #e7e7e7;
+}
+
+input[type="date"]:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(50%);
+}
+
+@media print {
+    .noPrint {
+        display: none;
+        /* Elements with noPrint class won’t be printed */
+    }
+}
