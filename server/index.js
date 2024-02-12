@@ -9,10 +9,22 @@ require("dotenv").config(); // Load environment variables
 const dbPath =
   process.env.ENVIRONMENT === "prod"
     ? process.env.PROD_DB_PATH
-    : process.env.DEV_DB_PATH;
+    : process.env.DEV_DB_PATH || "C:\\Program Files (x86)\\FingerTec\\FingerTec TCMS V3\\TCMS V3\\ingress.mdb";
 const connection = ADODB.open(
   `Provider=Microsoft.Jet.OLEDB.4.0;Data Source=${dbPath};Jet OLEDB:Database Password=ingress;`
 );
+
+console.log(dbPath, "DBPATH HERE");
+const fs = require('fs');
+const path = `C:\\Program Files (x86)\\FingerTec\\FingerTec TCMS V3\\TCMS V3\\ingress.mdb`;
+
+try {
+  fs.accessSync(path, fs.constants.R_OK);
+  console.log('File exists and is readable');
+} catch (error) {
+  console.error('File cannot be accessed:', error);
+}
+
 
 app.use(cors());
 
@@ -41,6 +53,7 @@ function groupData(data) {
 }
 
 app.get("/api/report", async (req, res) => {
+  console.log("is this doing anything?")
   const {startDate, endDate} = req.query; // Assuming dates are received in 'YYYY-MM-DD' format
   const formattedStartDate = formatDate(startDate); // Implement this function to format date
   const formattedEndDate = formatDate(endDate); // Implement this function to format date
