@@ -3,8 +3,15 @@ const app = express();
 const cors = require("cors");
 const port = 3001; // Ensure this is different from your React app's port
 const ADODB = require("node-adodb");
+require("dotenv").config(); // Load environment variables
+
+// Determine the database source based on the environment
+const dbPath =
+  process.env.ENVIRONMENT === "prod"
+    ? process.env.PROD_DB_PATH
+    : process.env.DEV_DB_PATH;
 const connection = ADODB.open(
-  "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=../ingress.mdb;Jet OLEDB:Database Password=ingress;"
+  `Provider=Microsoft.Jet.OLEDB.4.0;Data Source=${dbPath};Jet OLEDB:Database Password=ingress;`
 );
 
 app.use(cors());
