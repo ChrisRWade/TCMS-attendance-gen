@@ -97,10 +97,13 @@ const ReportViewer = ({data, startDate, endDate}) => {
       {Object.entries(data).map(([gName, users]) => (
         <div key={gName} className={styles.department}>
           <h2>{gName}</h2>
-          {Object.entries(users).map(([username, dates]) => (
-            <div key={username} className={styles.employee}>
-              <h3>{username}</h3>
-              {Object.entries(dates).map(([date, checktimes]) => {
+          {Object.entries(users).map(([username, userInfo]) => (
+            <div key={userInfo.userid} className={styles.employee}>
+              <div>
+                <h3>{username}</h3>
+                <h5>{userInfo.userid}</h5>
+              </div>
+              {Object.entries(userInfo.dates).map(([date, checktimes]) => {
                 // Convert checktimes to Eastern time zone before passing to calculateWorkHours
                 const punchesInEastern = checktimes.map((time) =>
                   moment.tz(time, "America/New_York").format()
