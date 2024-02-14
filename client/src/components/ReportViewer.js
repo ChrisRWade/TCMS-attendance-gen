@@ -1,8 +1,6 @@
 import React from "react";
 import styles from "./ReportViewer.module.css";
 
-//hello
-
 const moment = require("moment-timezone");
 
 function formatTimeToEastern(timeString) {
@@ -31,6 +29,49 @@ const isLatePunch = (time) => {
     new Date(time).getHours() + new Date(time).getMinutes() / 60;
   return punchTime > 8;
 };
+
+function isLateFromLunch(punches) {
+  // Convert all punches to Eastern time and format them for comparison
+  const formattedPunches = punches.map((punch) =>
+    moment.tz(punch, "America/New_York").format("HH:mm")
+  );
+
+  let lunchPunchIndex = null;
+
+  // Determine which punch to check based on the number of punches
+  if (formattedPunches.length === 4) {
+    lunchPunchIndex = 2; // 3rd punch (0-based index)
+  } else if (formattedPunches.length === 6) {
+    // It's either the 3rd or the 5th punch, but we verify by checking if it starts with "12"
+    lunchPunchIndex = formattedPunches[2].startsWith("12") ? 2 : 4;
+  } else if (formattedPunches.length === 8) {
+    lunchPunchIndex = 4; // 5th punch
+  }
+
+  // If we've identified a lunch punch, check if it's late
+  if (lunchPunchIndex !== null) {
+    const lunchPunchTime = formattedPunches[lunchPunchIndex];
+    // Assuming lunch is from 12:00 to 12:30, any punch starting with "12:3" or later is late
+    return lunchPunchTime >= "12:31";
+  }
+
+  // Default to not late if there's no lunch punch to check
+  return false;
+}
+
+function determineLunchPunchIndex(punches) {
+  if (punches.length === 4) {
+    return 2; // 3rd punch
+  } else if (punches.length === 6) {
+    const formattedThirdPunch = moment
+      .tz(punches[2], "America/New_York")
+      .format("HH:mm");
+    return formattedThirdPunch.startsWith("12") ? 2 : 4;
+  } else if (punches.length === 8) {
+    return 4; // 5th punch
+  }
+  return null; // No lunch punch index
+}
 
 function roundToNearestQuarterHour(time) {
   let rounded = moment(time);
@@ -86,9 +127,19 @@ function calculateWorkHours(punches) {
   return roundTotalHoursToNearestQuarter(totalHours);
 }
 
-function updatePrintFooter(startDate, endDate) {
-  document.getElementById("printStartDate").textContent = startDate;
-  document.getElementById("printEndDate").textContent = endDate;
+function removeDuplicatePunches(punches) {
+  const uniquePunches = [];
+  const seenTimes = new Set();
+
+  punches.forEach((punch) => {
+    const formattedPunch = moment.tz(punch, "America/New_York").format("HH:mm"); // Ensure consistent formatting
+    if (!seenTimes.has(formattedPunch)) {
+      uniquePunches.push(punch); // Keep the original punch for further processing
+      seenTimes.add(formattedPunch);
+    }
+  });
+
+  return uniquePunches;
 }
 
 const ReportViewer = ({data, startDate, endDate}) => {
@@ -104,29 +155,37 @@ const ReportViewer = ({data, startDate, endDate}) => {
                 <h5>{userInfo.userid}</h5>
               </div>
               {Object.entries(userInfo.dates).map(([date, checktimes]) => {
-                // Convert checktimes to Eastern time zone before passing to calculateWorkHours
-                const punchesInEastern = checktimes.map((time) =>
+                // Remove duplicate times after conversion and ensure they're unique
+                const uniquePunches = removeDuplicatePunches(checktimes);
+                const punchesInEastern = uniquePunches.map((time) =>
                   moment.tz(time, "America/New_York").format()
                 );
                 const hoursWorked = calculateWorkHours(punchesInEastern);
+                const lateLunchIndex = determineLunchPunchIndex(uniquePunches);
+                const isLateLunch =
+                  lateLunchIndex !== null
+                    ? isLateFromLunch(uniquePunches)
+                    : false;
+
                 return (
                   <div
                     key={date}
                     className={`${styles.date} ${
-                      isOdd(checktimes.length) ? styles.oddPunches : ""
+                      isOdd(uniquePunches.length) ? styles.oddPunches : ""
                     }`}
                   >
                     <h4>{date}</h4>
                     <span>{getDayOfWeek(date)}</span>
-                    <ul className={`${styles.punches}`}>
-                      {checktimes.map((time, index) => (
+                    <ul className={styles.punches}>
+                      {punchesInEastern.map((time, index) => (
                         <li
                           key={index}
-                          className={
-                            index === 0 && isLatePunch(time)
+                          className={`${
+                            (index === 0 && isLatePunch(time)) ||
+                            (index === lateLunchIndex && isLateLunch)
                               ? styles.latePunch
                               : ""
-                          }
+                          }`}
                         >
                           {formatTimeToEastern(time)}
                         </li>
@@ -145,7 +204,7 @@ const ReportViewer = ({data, startDate, endDate}) => {
       ))}
       <div className={`${styles.printFooter} ${styles.noPrint}`}>
         Weekly Attendance - {startDate} - {endDate}
-      </div>{" "}
+      </div>
     </div>
   );
 };

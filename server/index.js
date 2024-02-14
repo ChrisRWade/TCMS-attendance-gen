@@ -16,15 +16,15 @@ const connection = ADODB.open(
 );
 
 console.log(dbPath, "DBPATH HERE");
-const fs = require("fs");
-const path = `C:\\Program Files (x86)\\FingerTec\\FingerTec TCMS V3\\TCMS V3\\ingress.mdb`;
+// const fs = require("fs");
+// const path = `C:\\Program Files (x86)\\FingerTec\\FingerTec TCMS V3\\TCMS V3\\ingress.mdb`;
 
-try {
-  fs.accessSync(path, fs.constants.R_OK);
-  console.log("File exists and is readable");
-} catch (error) {
-  console.error("File cannot be accessed:", error);
-}
+// try {
+//   fs.accessSync(path, fs.constants.R_OK);
+//   console.log("File exists and is readable");
+// } catch (error) {
+//   console.error("File cannot be accessed:", error);
+// }
 
 app.use(cors());
 
@@ -63,7 +63,8 @@ FROM ((auditdata a
 INNER JOIN [user] u ON a.userid = u.userid)
 INNER JOIN user_group ug ON u.User_Group = ug.id)
 WHERE a.AttendDate >= CDate('${formattedStartDate}') AND a.AttendDate <= CDate('${formattedEndDate}')
-ORDER BY ug.gName, CAST(u.userid AS INT), a.AttendDate, a.checktime;`;
+ORDER BY ug.gName, CInt(u.userid), a.AttendDate, a.checktime;
+`;
 
   try {
     const data = await connection.query(query);
