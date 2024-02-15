@@ -142,6 +142,24 @@ function removeDuplicatePunches(punches) {
   return uniquePunches;
 }
 
+function isOverPunch(punchTime, index, totalPunches) {
+  const formattedTime = moment
+    .tz(punchTime, "America/New_York")
+    .format("HH:mm");
+
+  // Check if the first punch is 7:40 AM or before
+  if (index === 0 && formattedTime <= "07:40") {
+    return true;
+  }
+
+  // Check if the last punch is 4:40 PM or later
+  if (index === totalPunches - 1 && formattedTime >= "16:40") {
+    return true;
+  }
+
+  return false;
+}
+
 const ReportViewer = ({data, startDate, endDate}) => {
   return (
     <div>
@@ -157,6 +175,8 @@ const ReportViewer = ({data, startDate, endDate}) => {
               {Object.entries(userInfo.dates).map(([date, checktimes]) => {
                 // Remove duplicate times after conversion and ensure they're unique
                 const uniquePunches = removeDuplicatePunches(checktimes);
+                const totalPunches = uniquePunches.length;
+
                 const punchesInEastern = uniquePunches.map((time) =>
                   moment.tz(time, "America/New_York").format()
                 );
@@ -184,6 +204,10 @@ const ReportViewer = ({data, startDate, endDate}) => {
                             (index === 0 && isLatePunch(time)) ||
                             (index === lateLunchIndex && isLateLunch)
                               ? styles.latePunch
+                              : ""
+                          } ${
+                            isOverPunch(time, index, totalPunches)
+                              ? styles.isOver
                               : ""
                           }`}
                         >

@@ -53,7 +53,7 @@ function groupData(data) {
 }
 
 app.get("/api/report", async (req, res) => {
-  console.log("is this doing anything?");
+  console.log("report endpoint hit");
   const {startDate, endDate} = req.query; // Assuming dates are received in 'YYYY-MM-DD' format
   const formattedStartDate = formatDate(startDate); // Implement this function to format date
   const formattedEndDate = formatDate(endDate); // Implement this function to format date

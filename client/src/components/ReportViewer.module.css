@@ -56,6 +56,11 @@
     color: #ff0000;
 }
 
+.punches .isOver {
+    color: #1322ed;
+
+}
+
 .date.oddPunches {
     position: relative;
     /* Ensure the .date container can serve as a reference for the absolute positioning of the pseudo-element */
