@@ -1,6 +1,5 @@
 import React from "react";
 import styles from "./ReportViewer.module.css";
-
 const moment = require("moment-timezone");
 
 function formatTimeToEastern(timeString) {
@@ -76,55 +75,77 @@ function determineLunchPunchIndex(punches) {
 function roundToNearestQuarterHour(time) {
   let rounded = moment(time);
   let minutes = rounded.minute();
-  let offset = 15 - (minutes % 15);
-  if (offset === 15) offset = 0; // If exactly on a quarter hour, don't add any offset
-  if (minutes % 15 > 7) {
-    // More than halfway, round up
-    rounded = rounded.add(offset, "minutes");
-  } else {
-    // Less than halfway, round down
-    rounded = rounded.subtract(minutes % 15, "minutes");
-  }
+  let remainder = minutes % 15;
+  let adjustment = remainder < 8 ? -remainder : 15 - remainder;
+  rounded.add(adjustment, "minutes");
   return rounded;
 }
 
-function roundTotalHoursToNearestQuarter(hours) {
-  // Convert hours to a total of minutes to handle rounding more granularly
-  let totalMinutes = hours * 60;
-  // Round to the nearest quarter-hour in minutes
-  totalMinutes = Math.round(totalMinutes / 15) * 15;
-  // Convert back to hours
-  return totalMinutes / 60;
+function filterAndRoundPunches(punches) {
+  const adjustedPunches = [];
+  let isFirstPunchHandled = false;
+
+  for (let i = 0; i < punches.length; i++) {
+    let punchMoment = moment.tz(punches[i], "America/New_York");
+
+    // Adjust the first punch if it's before 8 AM and hasn't been handled yet
+    if (!isFirstPunchHandled) {
+      if (punchMoment.hour() < 8) {
+        punchMoment.hour(8).minute(0);
+      }
+      isFirstPunchHandled = true;
+    } else {
+      // For subsequent punches, round to the nearest quarter hour
+      let minutes = punchMoment.minute();
+      let adjustment = minutes % 15;
+      let addMinutes = adjustment < 8 ? -adjustment : 15 - adjustment;
+      punchMoment.add(addMinutes, "minutes");
+    }
+
+    // Skip adding punches that are part of a short break
+    if (i + 1 < punches.length) {
+      const nextPunchMoment = moment.tz(punches[i + 1], "America/New_York");
+      const duration = nextPunchMoment.diff(punchMoment, "minutes");
+
+      if (duration <= 20) {
+        // Adjust i to skip the next punch
+        i++;
+        continue;
+      }
+    }
+
+    // Add the adjusted punch to the list
+    adjustedPunches.push(punchMoment.format());
+  }
+
+  return adjustedPunches;
 }
 
 function calculateWorkHours(punches) {
+  if (!punches || punches.length === 0) {
+    console.log("punches", punches);
+
+    return -0.0; // No punches to calculate hours
+  }
+  if (punches.length % 2 !== 0) {
+    return null; // Must have an even number of punches to calculate hours
+  }
   let totalMinutes = 0;
+  const adjustedPunches = filterAndRoundPunches(punches);
 
-  for (let i = 0; i < punches.length; i += 2) {
-    if (i + 1 < punches.length) {
-      // Ensure there's a pair
-      // Convert and adjust punch times to Eastern Time
-      let inTime = moment.tz(punches[i], "America/New_York");
-      const outTime = moment.tz(punches[i + 1], "America/New_York");
+  for (let i = 0; i < adjustedPunches.length; i += 2) {
+    if (i + 1 < adjustedPunches.length) {
+      const inTime = moment.tz(adjustedPunches[i], "America/New_York");
+      const outTime = moment.tz(adjustedPunches[i + 1], "America/New_York");
 
-      // If the first punch of the day is before 8 AM, adjust it to 8 AM
-      if (i === 0 && inTime.hour() < 8) {
-        inTime.hour(8).minute(0).second(0);
-      }
-
-      // Round punch times to the nearest quarter-hour
-      inTime = roundToNearestQuarterHour(inTime).valueOf();
-      const roundedOutTime = roundToNearestQuarterHour(outTime).valueOf();
-
-      let duration = (roundedOutTime - inTime) / (1000 * 60); // Calculate duration in minutes
-
+      let duration = outTime.diff(inTime, "minutes");
       totalMinutes += duration;
     }
   }
 
-  // Convert total minutes to hours, then round to the nearest quarter-hour
-  const totalHours = totalMinutes / 60;
-  return roundTotalHoursToNearestQuarter(totalHours);
+  // Convert total minutes to hours and round to the nearest quarter-hour
+  let totalHours = totalMinutes / 60;
+  return Math.round(totalHours * 4) / 4;
 }
 
 function removeDuplicatePunches(punches) {
@@ -161,6 +182,12 @@ function isOverPunch(punchTime, index, totalPunches) {
 }
 
 const ReportViewer = ({data, startDate, endDate}) => {
+  // Define atypical user IDs
+  const atypicalUserIds = ["374"];
+
+  // Function to check if a user is atypical
+  const isAtypicalUser = (userId) => atypicalUserIds.includes(userId);
+
   return (
     <div>
       {Object.entries(data).map(([gName, users]) => (
@@ -180,7 +207,22 @@ const ReportViewer = ({data, startDate, endDate}) => {
                 const punchesInEastern = uniquePunches.map((time) =>
                   moment.tz(time, "America/New_York").format()
                 );
-                const hoursWorked = calculateWorkHours(punchesInEastern);
+
+                if (gName === "8 - Office") {
+                  console.log(userInfo.dates);
+                  console.log(uniquePunches.length);
+                }
+
+                let hoursWorked = calculateWorkHours(punchesInEastern);
+
+                // If user belongs to "8 - Office" with only 2 punches and hours >= 6, adjust hours
+                if (
+                  gName === "8 - Office" &&
+                  uniquePunches.length === 2 &&
+                  hoursWorked >= 6
+                ) {
+                  hoursWorked -= 0.5; // Deduct half an hour
+                }
                 const lateLunchIndex = determineLunchPunchIndex(uniquePunches);
                 const isLateLunch =
                   lateLunchIndex !== null
@@ -201,11 +243,19 @@ const ReportViewer = ({data, startDate, endDate}) => {
                         <li
                           key={index}
                           className={`${
-                            (index === 0 && isLatePunch(time)) ||
-                            (index === lateLunchIndex && isLateLunch)
+                            index === 0 &&
+                            isLatePunch(time) &&
+                            !isAtypicalUser(userInfo.userid)
                               ? styles.latePunch
                               : ""
-                          } ${
+                          }
+                                       ${
+                                         index === lateLunchIndex &&
+                                         isLateLunch &&
+                                         !isAtypicalUser(userInfo.userid)
+                                           ? styles.latePunch
+                                           : ""
+                                       } ${
                             isOverPunch(time, index, totalPunches)
                               ? styles.isOver
                               : ""
@@ -217,7 +267,10 @@ const ReportViewer = ({data, startDate, endDate}) => {
                     </ul>
                     {/* Display calculated hours worked for the day */}
                     <div className={styles.hoursWorked}>
-                      H: {hoursWorked.toFixed(2)}
+                      H:
+                      {typeof hoursWorked === "number" && !isNaN(hoursWorked)
+                        ? hoursWorked.toFixed(2)
+                        : "???"}
                     </div>
                   </div>
                 );
