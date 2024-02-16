@@ -123,8 +123,6 @@ function filterAndRoundPunches(punches) {
 
 function calculateWorkHours(punches) {
   if (!punches || punches.length === 0) {
-    console.log("punches", punches);
-
     return -0.0; // No punches to calculate hours
   }
   if (punches.length % 2 !== 0) {
@@ -193,90 +191,102 @@ const ReportViewer = ({data, startDate, endDate}) => {
       {Object.entries(data).map(([gName, users]) => (
         <div key={gName} className={styles.department}>
           <h2>{gName}</h2>
-          {Object.entries(users).map(([username, userInfo]) => (
-            <div key={userInfo.userid} className={styles.employee}>
-              <div>
-                <h3>{username}</h3>
-                <h5>{userInfo.userid}</h5>
-              </div>
-              {Object.entries(userInfo.dates).map(([date, checktimes]) => {
-                // Remove duplicate times after conversion and ensure they're unique
-                const uniquePunches = removeDuplicatePunches(checktimes);
-                const totalPunches = uniquePunches.length;
+          {Object.entries(users).map(([username, userInfo]) => {
+            //initialize totalHours for each user
+            let totalHours = 0;
 
-                const punchesInEastern = uniquePunches.map((time) =>
-                  moment.tz(time, "America/New_York").format()
-                );
+            return (
+              <div key={userInfo.userid} className={styles.employee}>
+                <div className={styles.employeeDetail}>
+                  <h5>{username}</h5>
+                  <h5 className={styles.employeeId}>({userInfo.userid})</h5>
+                </div>
+                {Object.entries(userInfo.dates).map(([date, checktimes]) => {
+                  // Remove duplicate times after conversion and ensure they're unique
+                  const uniquePunches = removeDuplicatePunches(checktimes);
+                  const totalPunches = uniquePunches.length;
 
-                if (gName === "8 - Office") {
-                  console.log(userInfo.dates);
-                  console.log(uniquePunches.length);
-                }
+                  const punchesInEastern = uniquePunches.map((time) =>
+                    moment.tz(time, "America/New_York").format()
+                  );
 
-                let hoursWorked = calculateWorkHours(punchesInEastern);
+                  let hoursWorked = calculateWorkHours(punchesInEastern);
 
-                // If user belongs to "8 - Office" with only 2 punches and hours >= 6, adjust hours
-                if (
-                  gName === "8 - Office" &&
-                  uniquePunches.length === 2 &&
-                  hoursWorked >= 6
-                ) {
-                  hoursWorked -= 0.5; // Deduct half an hour
-                }
-                const lateLunchIndex = determineLunchPunchIndex(uniquePunches);
-                const isLateLunch =
-                  lateLunchIndex !== null
-                    ? isLateFromLunch(uniquePunches)
-                    : false;
+                  // If user belongs to "8 - Office" with only 2 punches and hours >= 6, adjust hours
+                  if (
+                    gName === "8 - Office" &&
+                    uniquePunches.length === 2 &&
+                    hoursWorked >= 6
+                  ) {
+                    hoursWorked -= 0.5; // Deduct half an hour
+                  }
 
-                return (
-                  <div
-                    key={date}
-                    className={`${styles.date} ${
-                      isOdd(uniquePunches.length) ? styles.oddPunches : ""
-                    }`}
-                  >
-                    <h4>{date}</h4>
-                    <span>{getDayOfWeek(date)}</span>
-                    <ul className={styles.punches}>
-                      {punchesInEastern.map((time, index) => (
-                        <li
-                          key={index}
-                          className={`${
-                            index === 0 &&
-                            isLatePunch(time) &&
-                            !isAtypicalUser(userInfo.userid)
-                              ? styles.latePunch
-                              : ""
-                          }
-                                       ${
-                                         index === lateLunchIndex &&
-                                         isLateLunch &&
-                                         !isAtypicalUser(userInfo.userid)
-                                           ? styles.latePunch
-                                           : ""
-                                       } ${
-                            isOverPunch(time, index, totalPunches)
-                              ? styles.isOver
-                              : ""
-                          }`}
-                        >
-                          {formatTimeToEastern(time)}
-                        </li>
-                      ))}
-                    </ul>
-                    {/* Display calculated hours worked for the day */}
-                    <div className={styles.hoursWorked}>
-                      H:
-                      {typeof hoursWorked === "number" && !isNaN(hoursWorked)
-                        ? hoursWorked.toFixed(2)
-                        : "???"}
+                  totalHours += hoursWorked;
+
+                  const lateLunchIndex =
+                    determineLunchPunchIndex(uniquePunches);
+                  const isLateLunch =
+                    lateLunchIndex !== null
+                      ? isLateFromLunch(uniquePunches)
+                      : false;
+
+                  return (
+                    <div
+                      key={date}
+                      className={`${styles.date} ${
+                        isOdd(uniquePunches.length) ? styles.oddPunches : ""
+                      }`}
+                    >
+                      <div className={styles.dayDetails}>
+                        <h5 className={styles.calendarDate}>{date}</h5>
+                        <span className={styles.dayOfWeek}>
+                          ({getDayOfWeek(date)})
+                        </span>
+                      </div>
+                      <ul className={styles.punches}>
+                        {punchesInEastern.map((time, index) => (
+                          <li
+                            key={index}
+                            className={`${
+                              index === 0 &&
+                              isLatePunch(time) &&
+                              !isAtypicalUser(userInfo.userid)
+                                ? styles.latePunch
+                                : ""
+                            } ${
+                              index === lateLunchIndex &&
+                              isLateLunch &&
+                              !isAtypicalUser(userInfo.userid)
+                                ? styles.latePunch
+                                : ""
+                            } ${
+                              isOverPunch(time, index, totalPunches)
+                                ? styles.isOver
+                                : ""
+                            }`}
+                          >
+                            {formatTimeToEastern(time)}
+                          </li>
+                        ))}
+                      </ul>
+                      {/* Display calculated hours worked for the day */}
+                      <div className={styles.hoursWorked}>
+                        H:
+                        {typeof hoursWorked === "number" && !isNaN(hoursWorked)
+                          ? hoursWorked.toFixed(2)
+                          : "???"}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          ))}
+                  );
+                })}
+                <div className={styles.totalHours}>
+                  <span>
+                    <strong>T: {totalHours.toFixed(2)}</strong>
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       ))}
       <div className={`${styles.printFooter} ${styles.noPrint}`}>

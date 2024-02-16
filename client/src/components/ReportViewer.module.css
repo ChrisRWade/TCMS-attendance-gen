@@ -8,15 +8,13 @@
 
 .employee {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    background-color: #f5f5f5;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-
+    border-bottom: solid 2px #000;
+        padding-right: 1rem;
+            padding-left: 1rem;
 }
 
 .employee li {
@@ -26,26 +24,70 @@
     font-weight: 500;
 }
 
+.employeeDetail {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 5px;
+    max-height: 35px;
+    text-decoration: underline;
+}
+
+.employeeId {
+    margin-left: 1rem;
+}
+
 .date {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
     padding-left: 20px;
     padding-right: 20px;
-    border-radius: 0.5rem;
-    background-color: #f5f5f5;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     position: relative;
+    width: 100%;
+    border-bottom: solid 1px #000;
+    max-height: 25px;
+}
+
+.dayDetails {
+    display: flex;
+    min-width: 170px;
+}
+
+.calendarDate {
+    font-weight: 600;
+    color: #000;
+    margin: 0;
+    min-width: 70px;
+    }
+
+.dayOfWeek {
+    font-size: 12px;
+    color: #000;
+    margin: 0;
+    margin-right: 1rem;
 }
 
 .punches {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: flex-start;
-    padding-inline-start: 0;
     width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.punches li {
+    list-style: none;
+    color: #000;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-right: 1rem;
+
 }
 
 .oddPunches {
@@ -67,8 +109,7 @@
 }
 
 .date.oddPunches::before {
-    content: "?";
-    /* This is the question mark */
+    content: "? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?";
     position: absolute;
     top: 0;
     left: 0;
@@ -77,7 +118,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 12em;
+    font-size: 20px;
     /* Adjust the size of the question mark as needed */
     color: rgba(0, 0, 0, 0.2);
     /* Semi-transparent color for the question mark */
@@ -85,6 +126,13 @@
     /* Ensure it's above the content of the .date container but below any interactive elements you might have */
     pointer-events: none;
     /* Allows clicks to pass through to elements underneath */
+}
+
+.totalHours {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    width: 100%;
 }
 
 @media print {
