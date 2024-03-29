@@ -88,9 +88,11 @@ function filterAndRoundPunches(punches) {
   for (let i = 0; i < punches.length; i++) {
     let punchMoment = moment.tz(punches[i], "America/New_York");
 
-    // Adjust the first punch if it's before 8 AM and hasn't been handled yet
+    // Adjust the first punch if it's between 7:40 AM and 7:59 AM and hasn't been handled yet
     if (!isFirstPunchHandled) {
-      if (punchMoment.hour() < 8) {
+      const punchHour = punchMoment.hour();
+      const punchMinute = punchMoment.minute();
+      if (punchHour === 7 && punchMinute >= 40) {
         punchMoment.hour(8).minute(0);
       }
       isFirstPunchHandled = true;
