@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect} from "react";
 import styles from "./ReportViewer.module.css";
 const moment = require("moment-timezone");
 
@@ -187,6 +187,13 @@ const ReportViewer = ({data, startDate, endDate}) => {
 
   // Function to check if a user is atypical
   const isAtypicalUser = (userId) => atypicalUserIds.includes(userId);
+
+  useEffect(() => {
+    // Assuming 'startDate' is the state holding the value of the first date selector
+    if (startDate) {
+      document.title = `Time Cards - Week of ${startDate}`;
+    }
+  }, [startDate]);
 
   return (
     <div>
