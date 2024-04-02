@@ -204,6 +204,32 @@ const ReportViewer = ({data, startDate, endDate}) => {
             //initialize totalHours for each user
             let totalHours = 0;
 
+            // Check if there are no punches
+            const hasNoPunches =
+              Object.keys(userInfo.dates).length === 0 ||
+              Object.values(userInfo.dates).every(
+                (checktimes) => checktimes.length === 0
+              );
+
+            if (hasNoPunches) {
+              // Handle rendering for employees with no punches
+              return (
+                <div className={`${styles.noPunchesDepartment}`}>
+                  <div
+                    key={userInfo.userid}
+                    className={`${styles.employee} ${styles.noPunches}`}
+                  >
+                    <div className={styles.employeeDetail}>
+                      <h5>{username}</h5>
+                      <h5 className={styles.employeeId}>
+                        ({userInfo.userid}) - No punches recorded
+                      </h5>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div key={userInfo.userid} className={styles.employee}>
                 <div className={styles.employeeDetail}>

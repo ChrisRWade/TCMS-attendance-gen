@@ -47,19 +47,49 @@ const Layout = () => {
   const [endDate, setEndDate] = useState("");
   const [reportData, setReportData] = useState(null);
 
-  const handleSubmit = async () => {
+  const fetchActiveEmployees = async () => {
     const response = await fetch(
+      `http://localhost:3001/api/active-employees?startDate=${startDate}`
+    );
+    if (response.ok) {
+      return response.json();
+    }
+    throw new Error("Failed to fetch active employees");
+  };
+
+  const mergeData = (report, activeEmployees) => {
+    const mergedData = {...report};
+
+    activeEmployees.forEach((emp) => {
+      const userGroup = mergedData[emp.gName] || {};
+      if (!userGroup[emp.Username]) {
+        if (!mergedData[emp.gName]) {
+          mergedData[emp.gName] = {};
+        }
+        mergedData[emp.gName][emp.Username] = {
+          userid: emp.userid,
+          dates: {}, // Indicate no hours recorded
+        };
+      }
+    });
+
+    return mergedData;
+  };
+
+  const handleSubmit = async () => {
+    const reportResponse = await fetch(
       `http://localhost:3001/api/report?startDate=${startDate}&endDate=${endDate}`
     );
-    let data = await response.json();
+    let reportData = await reportResponse.json();
 
-    // Preprocess data to ensure consistency across the date range
-    if (data && startDate && endDate) {
-      data = preprocessDataForReport(data, startDate, endDate);
+    // Fetch active employees and merge with report data
+    if (reportData && startDate && endDate) {
+      const activeEmployees = await fetchActiveEmployees();
+      reportData = preprocessDataForReport(reportData, startDate, endDate);
+      reportData = mergeData(reportData, activeEmployees);
     }
 
-    setReportData(data);
-    console.log(data);
+    setReportData(reportData);
   };
 
   return (
@@ -69,7 +99,7 @@ const Layout = () => {
         endDate={endDate}
         onStartDateChange={setStartDate}
         onEndDateChange={setEndDate}
-      />{" "}
+      />
       <button onClick={handleSubmit} className={styles.noPrint}>
         Submit
       </button>

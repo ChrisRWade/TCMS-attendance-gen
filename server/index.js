@@ -75,6 +75,27 @@ ORDER BY ug.gName, CInt(u.userid), a.AttendDate, a.checktime;
   }
 });
 
+app.get("/api/active-employees", async (req, res) => {
+  const {startDate} = req.query;
+  const formattedStartDate = formatDate(startDate);
+
+  const query = `
+        SELECT userid, Username, gName
+        FROM [user] u
+        INNER JOIN user_group AS ug ON u.User_Group = ug.id
+        WHERE ExpiryDate IS NULL OR CDate(ExpiryDate) >= CDate('${formattedStartDate}')
+        ORDER BY u.userid;
+    `;
+
+  try {
+    const activeEmployees = await connection.query(query);
+    res.json(activeEmployees);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error querying the database for active employees");
+  }
+});
+
 app.get("/api", (req, res) => {
   res.json({message: "Hello from server!"});
 });
