@@ -158,6 +158,7 @@
 
                   .noPunchesDepartment {
                       page-break-before: always;
+                        margin-bottom: 150px;
                   }
 }
 
