@@ -153,7 +153,7 @@ function removeDuplicatePunches(punches) {
   const seenTimes = new Set();
 
   punches.forEach((punch) => {
-    const formattedPunch = moment.tz(punch, "America/New_York").format("HH:mm"); // Ensure consistent formatting
+    const formattedPunch = moment(punch).toISOString();
     if (!seenTimes.has(formattedPunch)) {
       uniquePunches.push(punch); // Keep the original punch for further processing
       seenTimes.add(formattedPunch);
